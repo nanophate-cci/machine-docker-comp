@@ -7,6 +7,17 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Create Directory for Certificates
+          command: mkdir -p shared/redis-certs
+      - run:
+          name: Create redis-ssl crets
+          command: |
+              openssl genrsa -out shared/redis-certs/redis-key.pem 2048
+              openssl req -new -key shared/redis-certs/redis-key.pem -out shared/redis-certs/redis.csr -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=localhost"
+              openssl x509 -req -days 365 -in shared/redis-certs/redis.csr -signkey shared/redis-certs/redis-key.pem -out ./shared/redis-certs/redis-cert.pem
+              openssl genrsa -out shared/redis-certs/rootCA-key.pem 2048
+              openssl req -x509 -new -nodes -key shared/redis-certs/rootCA-key.pem -sha256 -days 1024 -out shared/redis-certs/rootCA.pem -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=localhost"
+      - run:
           name: Start Redis Services
           command: docker-compose up -d
       - run:
@@ -15,3 +26,11 @@ jobs:
       - run:
           name: Verify Redis-SSL Container is Running
           command: docker ps --filter "name=redis-ssl"
+      - run:
+          name: Redis Container Log
+          command: docker logs redis
+          when: always
+      - run:
+          name: Redis-SSL Container Log
+          command: docker logs redis-ssl
+          when: always
