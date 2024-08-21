@@ -1,0 +1,19 @@
+services:
+  redis:
+    image: redis:7.0-alpine
+    container_name: redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./shared:/data
+
+  redis-ssl:
+    image: redis:7.0-alpine
+    container_name: redis-ssl
+    ports:
+      - "6381:6379"
+    volumes:
+      - ./shared:/data
+    environment:
+      NODE_EXTRA_CA_CERTS: /data/redis-certs/rootCA.pem
+    command: redis-server --port 6380 --tls-port 6381 --tls-cert-file /data/redis-certs/redis-cert.pem --tls-key-file /data/redis-certs/redis-key.pem --tls-ca-cert-file /data/redis-certs/rootCA.pem
